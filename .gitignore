@@ -3,3 +3,6 @@ image
 .md
 config.yaml
 *.md
+/BLUEBELL_fronted
+logs/
+*.log
