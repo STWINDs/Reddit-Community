@@ -1,0 +1,11 @@
+version: "2"
+sql:
+  - schema: "sql/schema"  # 这里放 goose 建表 sql 文件 (001_users.sql)
+    queries: "sql/query"  # 这里放要写的查询 sql 文件
+    engine: "mysql"
+    gen:
+      go:
+        package: "db"     # 
+        out: "db"        # 生成的代码放到哪个文件夹
+        sql_package: "database/sql"
+        emit_json_tags: true # 顺便生成 JSON tag

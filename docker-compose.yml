@@ -1,0 +1,67 @@
+services:
+  # MySQL 服务
+  mysql:
+    image: mysql:8.0
+    container_name: bluebell_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-test}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker_mysql_init:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Redis 服务
+  redis:
+    image: redis:6.2-alpine
+    container_name: bluebell_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Bluebell 后端服务
+  bluebell:
+    build: .
+    container_name: bluebell_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=root:123456@tcp(mysql:3306)/test?charset=utf8mb4&parseTime=True&loc=Local
+      - REDIS_HOST=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+
+  # Bluebell 前端服务
+  frontend:
+    build: ./BLUBELL_frontend
+    container_name: bluebell_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - bluebell
+
+volumes:
+  mysql_data:
+  redis_data:
